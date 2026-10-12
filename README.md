@@ -1,111 +1,101 @@
+
 # Linux Security Log Analyzer
 
-A simple Bash script that analyzes Linux security logs and detects suspicious IP addresses based on failed login attempts.
+A Python and Bash project for analyzing Linux authentication logs and identifying suspicious login activity.
 
 ## Features
 
-- Count successful login attempts
-- Count failed login attempts
-- Count failed login attempts by IP address
-- Detect suspicious IP addresses
-- Configurable failed login threshold
-- Validate log file input
-- Handle missing files and arguments
-
-## Usage
-
-```bash
-chmod +x analyzer.sh
-./analyzer.sh sample.log
-```
-
-## Example Output
-
-```text
-Analyzing: sample.log
-
-Successful login attempts: 1
-Failed login attempts: 5
-
-Failed attempts by IP:
-      1 192.168.8.20
-      3 192.168.8.30
-      1 192.168.8.50
-
-Suspicious IPs:
-IP: 192.168.8.30 | Failed attempts: 3
-```
-
-## How It Works
-
-The script reads a log file and analyzes login activity.
-
-It:
-
-1. Counts successful login attempts.
-2. Counts failed login attempts.
-3. Extracts IP addresses from failed login attempts.
-4. Counts failed attempts for each IP.
-5. Flags IP addresses that reach the configured threshold.
+- Analyze sample logs and supported Linux SSH authentication log formats
+- Count successful and failed login attempts
+- Group failed attempts by validated IP address
+- Flag IP addresses that meet a configurable threshold
+- Export reports to JSON
+- Handle missing files, permission errors, and invalid arguments
+- Run automated unit tests
 
 ## Requirements
 
-- Linux
-- Bash
-- grep
-- awk
-- sort
-- uniq
-- wc
+- Linux or WSL
+- Python 3
+- Bash (for the original Bash version)
+
+No third-party Python packages are required.
+
+## Usage
+
+Analyze the sample log:
+
+```bash
+python3 analyzer.py sample.log
+```
+
+Set a custom threshold:
+
+```bash
+python3 analyzer.py sample.log --threshold 5
+```
+
+Save a JSON report:
+
+```bash
+python3 analyzer.py sample.log --json report.json
+```
+
+View available options:
+
+```bash
+python3 analyzer.py --help
+```
+
+## Real Linux Logs
+
+On Ubuntu systems where the authentication log exists, you can analyze it locally:
+
+```bash
+sudo python3 analyzer.py /var/log/auth.log
+```
+
+The script needs read permission for the log file. Do not publish real authentication logs because they may contain sensitive system information.
+
+## Testing
+
+Run the automated tests from the project root:
+
+```bash
+python3 -m unittest discover -s tests -t . -v
+```
+
+The tests cover login counts, suspicious IP detection, and invalid IP handling.
 
 ## Project Structure
 
 ```text
 security-log-analyzer/
+├── analyzer.py
 ├── analyzer.sh
 ├── sample.log
+├── tests/
+│   └── test_analyzer.py
+├── .gitignore
 └── README.md
 ```
 
-## Configuration
+## Detection Logic
 
-The suspicious IP threshold can be changed inside `analyzer.sh`.
+The analyzer recognizes supported login messages using regular expressions, validates extracted IP addresses, and counts events by IP.
 
-```bash
-THRESHOLD=3
-```
+An IP is flagged when its failed login count reaches the configured threshold. This is a detection signal, not proof of malicious activity.
 
-For example:
+## Limitations
 
-```bash
-THRESHOLD=5
-```
-
-will flag IP addresses with 5 or more failed login attempts.
-
-## Error Handling
-
-The script checks that:
-
-- A log file argument is provided.
-- The specified log file exists.
-
-Example:
-
-```text
-Usage: ./analyzer.sh <log_file>
-```
-
-or:
-
-```text
-Error: Log file not found: fake.log
-```
+- Log formats vary between Linux distributions and authentication services.
+- Only the patterns implemented in the analyzer are recognized.
+- The tool does not block IP addresses or respond to incidents.
+- A failed login or suspicious IP does not by itself prove an attack.
 
 ## Future Improvements
 
-- Analyze real Linux authentication logs such as `/var/log/auth.log`
-- Add timestamps to detected events
-- Generate security reports
-- Detect multiple types of suspicious activity
-- Add more advanced log analysis
+- Support more authentication log formats
+- Add time-window-based detection
+- Add richer reporting and severity levels
+- Improve test coverage with additional log samples

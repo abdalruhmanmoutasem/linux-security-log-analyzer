@@ -1,25 +1,24 @@
-
 # Linux Security Log Analyzer
 
-A Python and Bash project for analyzing Linux authentication logs and identifying suspicious login activity.
+A Python and Bash tool for analyzing Linux authentication logs and identifying suspicious login activity.
 
 ## Features
 
-- Analyze sample logs and supported Linux SSH authentication log formats
-- Count successful and failed login attempts
-- Group failed attempts by validated IP address
-- Flag IP addresses that meet a configurable threshold
-- Export reports to JSON
-- Handle missing files, permission errors, and invalid arguments
-- Run automated unit tests
+- Count successful and failed login attempts.
+- Group login attempts by source IP address.
+- Validate extracted IP addresses.
+- Flag IP addresses that exceed a configurable failed-login threshold.
+- Detect repeated failed logins within a configurable time window.
+- Identify successful logins following repeated failures from the same IP.
+- Export analysis reports as JSON.
+- Handle missing files and permission errors.
+- Run automated unit tests.
 
 ## Requirements
 
-- Linux or WSL
+- Linux or WSL Ubuntu
 - Python 3
-- Bash (for the original Bash version)
-
-No third-party Python packages are required.
+- Bash (for the Bash version)
 
 ## Usage
 
@@ -29,73 +28,61 @@ Analyze the sample log:
 python3 analyzer.py sample.log
 ```
 
-Set a custom threshold:
+Set a threshold of five failures:
 
 ```bash
 python3 analyzer.py sample.log --threshold 5
 ```
 
-Save a JSON report:
+Detect repeated failures within ten minutes:
+
+```bash
+python3 analyzer.py /tmp/timed_sample.log --threshold 3 --window-minutes 10
+```
+
+Export the results to JSON:
 
 ```bash
 python3 analyzer.py sample.log --json report.json
 ```
 
-View available options:
+View all available options:
 
 ```bash
 python3 analyzer.py --help
 ```
 
-## Real Linux Logs
+## Automated Tests
 
-On Ubuntu systems where the authentication log exists, you can analyze it locally:
-
-```bash
-sudo python3 analyzer.py /var/log/auth.log
-```
-
-The script needs read permission for the log file. Do not publish real authentication logs because they may contain sensitive system information.
-
-## Testing
-
-Run the automated tests from the project root:
+Run the test suite:
 
 ```bash
 python3 -m unittest discover -s tests -t . -v
 ```
 
-The tests cover login counts, suspicious IP detection, and invalid IP handling.
+The tests cover login counts, suspicious IP detection, time-window detection, successful logins after repeated failures, and invalid IP addresses.
 
 ## Project Structure
 
-```text
-security-log-analyzer/
-├── analyzer.py
-├── analyzer.sh
-├── sample.log
-├── tests/
-│   └── test_analyzer.py
-├── .gitignore
-└── README.md
-```
+- `analyzer.py` — Python log analysis and detection logic
+- `analyzer.sh` — Bash-based log analysis
+- `sample.log` — Synthetic sample authentication events
+- `tests/test_analyzer.py` — Automated tests
+- `README.md` — Project documentation
 
 ## Detection Logic
 
-The analyzer recognizes supported login messages using regular expressions, validates extracted IP addresses, and counts events by IP.
+The tool supports selected SSH authentication messages and synthetic sample messages. Time-window detection requires parseable timestamps.
 
-An IP is flagged when its failed login count reaches the configured threshold. This is a detection signal, not proof of malicious activity.
+A suspicious IP is an indicator for further investigation, not proof of a successful attack or system compromise.
 
 ## Limitations
 
-- Log formats vary between Linux distributions and authentication services.
-- Only the patterns implemented in the analyzer are recognized.
-- The tool does not block IP addresses or respond to incidents.
-- A failed login or suspicious IP does not by itself prove an attack.
+- Detection depends on the log formats and timestamp formats supported by the current implementation.
+- Events without parseable timestamps cannot be used for time-window detection.
+- The tool does not block IP addresses or perform automatic incident response.
+- It is a learning project, not a replacement for a production SIEM.
 
-## Future Improvements
+## Security Note
 
-- Support more authentication log formats
-- Add time-window-based detection
-- Add richer reporting and severity levels
-- Improve test coverage with additional log samples
+Use synthetic logs for public demonstrations. Authentication logs from real systems may contain sensitive information and should not be published without appropriate review and sanitization.
